@@ -49,14 +49,17 @@ for (i in 1:nrow(combinations)) {
 
 src_files <- list.files(path = "files", pattern = "^full.*R$")
 rda_files <- gsub("R$", "RData", src_files)
-target_list <- 
-  paste(rda_files, collapse = " ") %>% 
-  str_wrap() %>% 
-  str_split("\n") 
 
-target_list <- paste0("\t", target_list[[1]], collapse = " \\ \n")
+# target_list <- 
+#   paste(rda_files, collapse = " ") %>% 
+#   str_wrap() %>% 
+#   str_split("\n") 
 
-target_list <- paste("all: ", target_list, "\n\n")
+# target_list <- paste0("\t", target_list[[1]], collapse = " \\ \n")
+
+target_list <- paste0(rda_files, collapse = " ")
+
+target_list <- paste0("all: ", target_list, "\n\n")
 
 instruct <- function(src_file) {
   glue(
@@ -81,11 +84,8 @@ TIMESTAMP = $(shell  date '+%Y-%m-%d-%H-%M')
 here=${PWD}/..
 "
 
-cat(header, file = "files/makefile")
+cat(header, file = "files/makefile", sep = "")
 
-cat(target_list, file = "files/makefile", append = TRUE)
-cat(instructions, file = "files/makefile", append = TRUE)
+cat(target_list, file = "files/makefile", append = TRUE, sep = "")
+cat(instructions, file = "files/makefile", append = TRUE, sep = "")
 
-
-make_file <- paste(header, target_list, instructions, collapse = "\n")
-cat(make_file)
