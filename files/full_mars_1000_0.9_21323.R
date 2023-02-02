@@ -62,13 +62,13 @@ if (model == "mars") {
 
 # ------------------------------------------------------------------------------
 
-time_bisect <-
+time_search <-
   system.time({
-    res_bisect <- int_conformal_infer(mod_fit, sim_new_pred, level = conf_level)
+    res_search <- int_conformal_infer(mod_fit, sim_new_pred, level = conf_level)
   })
 
-res_bisect <-
-  res_bisect %>%
+res_search <-
+  res_search %>%
   bind_cols(sim_new) %>%
   mutate(
     out_bound = .pred_lower > .truth | .pred_upper < .truth,
@@ -82,9 +82,9 @@ sim_res <- tibble(
   model = model,
   conf_level = conf_level,
   workers = unname(future::nbrOfWorkers()),
-  bisect_time = time_bisect[3],
-  bisect_cov = mean(!res_bisect$out_bound, na.rm = TRUE),
-  bisect_fail = sum(res_bisect$no_result)
+  search_time = time_search[3],
+  search_cov = mean(!res_search$out_bound, na.rm = TRUE),
+  search_fail = sum(res_search$no_result)
 )
 
 # ------------------------------------------------------------------------------

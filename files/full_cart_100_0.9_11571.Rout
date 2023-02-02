@@ -32,7 +32,7 @@ Type 'q()' to quit R.
 ✖ dplyr::filter()  masks stats::filter()
 ✖ dplyr::lag()     masks stats::lag()
 ✖ recipes::step()  masks stats::step()
-• Learn how to get started at https://www.tidymodels.org/start/
+• Search for functions across packages at https://www.tidymodels.org/find/
 > library(conformity)
 > library(future)
 > library(glue)
@@ -100,7 +100,6 @@ Type 'q()' to quit R.
 +   system.time({
 +     res_bisect <- int_conformal_infer(mod_fit, sim_new_pred, level = conf_level)
 +   })
-There were 50 or more warnings (use warnings() to see the first 50)
 > 
 > res_bisect <-
 +   res_bisect %>%
@@ -130,6 +129,123 @@ There were 50 or more warnings (use warnings() to see the first 50)
 +   system.time({
 +     res_grid <- int_conformal_infer(mod_fit, sim_new_pred, level = conf_level, control = ctrl_grid)
 +   })
+> 
+> res_grid <-
++   res_grid %>%
++   bind_cols(sim_new) %>%
++   mutate(
++     out_bound = .pred_lower > .truth | .pred_upper < .truth,
++     no_result = is.na(.pred_lower) | is.na(.pred_upper)
++   )
+> 
+> sim_res$grid_time <- time_grid[3]
+> sim_res$grid_cov <- mean(!res_grid$out_bound, na.rm = TRUE)
+> sim_res$grid_fail <- sum(res_grid$no_result)
+> 
+> # ------------------------------------------------------------------------------
+> 
+> sessioninfo::session_info()
+─ Session info ───────────────────────────────────────────────────────────────
+ setting  value
+ version  R version 4.2.1 (2022-06-23)
+ os       macOS Big Sur ... 10.16
+ system   x86_64, darwin17.0
+ ui       X11
+ language (EN)
+ collate  en_US.UTF-8
+ ctype    en_US.UTF-8
+ tz       America/Los_Angeles
+ date     2023-02-02
+ pandoc   2.17.1.1 @ /usr/local/bin/pandoc
 
-Timing stopped at: 189.5 4.703 1733
-Execution halted
+─ Packages ───────────────────────────────────────────────────────────────────
+ package      * version    date (UTC) lib source
+ backports      1.4.1      2021-12-13 [1] CRAN (R 4.2.0)
+ broom        * 1.0.3      2023-01-25 [1] CRAN (R 4.2.0)
+ cachem         1.0.6      2021-08-19 [1] CRAN (R 4.2.0)
+ class          7.3-20     2022-01-16 [2] CRAN (R 4.2.1)
+ cli            3.6.0      2023-01-09 [1] CRAN (R 4.2.0)
+ codetools      0.2-18     2020-11-04 [2] CRAN (R 4.2.1)
+ colorspace     2.1-0      2023-01-23 [1] CRAN (R 4.2.0)
+ conflicted     1.1.0      2021-11-26 [1] CRAN (R 4.2.0)
+ conformity   * 0.0.0.9000 2023-02-02 [1] local
+ dials        * 1.1.0      2022-11-04 [1] CRAN (R 4.2.0)
+ DiceDesign     1.9        2021-02-13 [1] CRAN (R 4.2.0)
+ digest         0.6.31     2022-12-11 [1] CRAN (R 4.2.0)
+ dplyr        * 1.1.0      2023-01-29 [1] CRAN (R 4.2.1)
+ fansi          1.0.4      2023-01-22 [1] CRAN (R 4.2.0)
+ fastmap        1.1.0      2021-01-25 [1] CRAN (R 4.2.0)
+ foreach        1.5.2      2022-02-02 [1] CRAN (R 4.2.0)
+ furrr          0.3.1      2022-08-15 [1] CRAN (R 4.2.0)
+ future       * 1.30.0     2022-12-16 [1] CRAN (R 4.2.0)
+ future.apply   1.10.0     2022-11-05 [1] CRAN (R 4.2.0)
+ generics       0.1.3      2022-07-05 [1] CRAN (R 4.2.0)
+ ggplot2      * 3.4.0      2022-11-04 [1] CRAN (R 4.2.1)
+ globals        0.16.2     2022-11-21 [1] CRAN (R 4.2.1)
+ glue         * 1.6.2      2022-02-24 [1] CRAN (R 4.2.0)
+ gower          1.0.1      2022-12-22 [1] CRAN (R 4.2.0)
+ GPfit          1.0-8      2019-02-08 [1] CRAN (R 4.2.0)
+ gtable         0.3.1      2022-09-01 [1] CRAN (R 4.2.0)
+ hardhat        1.2.0.9000 2022-12-01 [1] Github (tidymodels/hardhat@c2c896c)
+ infer        * 1.0.4      2022-12-02 [1] CRAN (R 4.2.0)
+ ipred          0.9-13     2022-06-02 [1] CRAN (R 4.2.0)
+ iterators      1.0.14     2022-02-05 [1] CRAN (R 4.2.0)
+ lattice        0.20-45    2021-09-22 [2] CRAN (R 4.2.1)
+ lava           1.7.1      2023-01-06 [1] CRAN (R 4.2.0)
+ lhs            1.1.6      2022-12-17 [1] CRAN (R 4.2.0)
+ lifecycle      1.0.3      2022-10-07 [1] CRAN (R 4.2.0)
+ listenv        0.9.0      2022-12-16 [1] CRAN (R 4.2.0)
+ lubridate      1.9.1      2023-01-24 [1] CRAN (R 4.2.0)
+ magrittr       2.0.3      2022-03-30 [1] CRAN (R 4.2.0)
+ MASS           7.3-58.1   2022-08-03 [1] CRAN (R 4.2.0)
+ Matrix         1.5-1      2022-09-13 [1] CRAN (R 4.2.0)
+ memoise        2.0.1      2021-11-26 [1] CRAN (R 4.2.0)
+ modeldata    * 1.1.0      2023-01-25 [1] CRAN (R 4.2.1)
+ modelenv       0.1.0      2022-10-17 [1] CRAN (R 4.2.0)
+ munsell        0.5.0      2018-06-12 [1] CRAN (R 4.2.0)
+ nnet           7.3-18     2022-09-28 [1] CRAN (R 4.2.0)
+ parallelly     1.34.0     2023-01-13 [1] CRAN (R 4.2.0)
+ parsnip      * 1.0.3.9001 2023-01-30 [1] Github (tidymodels/parsnip@9df1f10)
+ pillar         1.8.1      2022-08-19 [1] CRAN (R 4.2.0)
+ pkgconfig      2.0.3      2019-09-22 [1] CRAN (R 4.2.0)
+ prodlim        2019.11.13 2019-11-17 [1] CRAN (R 4.2.0)
+ purrr        * 1.0.1      2023-01-10 [1] CRAN (R 4.2.0)
+ R6             2.5.1      2021-08-19 [1] CRAN (R 4.2.0)
+ Rcpp           1.0.10     2023-01-22 [1] CRAN (R 4.2.0)
+ recipes      * 1.0.4.9000 2023-01-27 [1] Github (tidymodels/recipes@1dfbefe)
+ rlang          1.0.6      2022-09-24 [1] CRAN (R 4.2.0)
+ rpart          4.1.16     2022-01-24 [2] CRAN (R 4.2.1)
+ rsample      * 1.1.1      2022-12-07 [1] CRAN (R 4.2.0)
+ rstudioapi     0.14       2022-08-22 [1] CRAN (R 4.2.0)
+ scales       * 1.2.1      2022-08-20 [1] CRAN (R 4.2.0)
+ sessioninfo    1.2.2      2021-12-06 [1] CRAN (R 4.2.0)
+ survival       3.4-0      2022-08-09 [1] CRAN (R 4.2.0)
+ tibble       * 3.1.8      2022-07-22 [1] CRAN (R 4.2.0)
+ tidymodels   * 1.0.0      2022-07-13 [1] CRAN (R 4.2.0)
+ tidyr        * 1.3.0      2023-01-24 [1] CRAN (R 4.2.0)
+ tidyselect     1.2.0      2022-10-10 [1] CRAN (R 4.2.0)
+ timechange     0.2.0      2023-01-11 [1] CRAN (R 4.2.0)
+ timeDate       4022.108   2023-01-07 [1] CRAN (R 4.2.0)
+ tune         * 1.0.1.9002 2023-01-27 [1] Github (tidymodels/tune@0e6f7a0)
+ utf8           1.2.2      2021-07-24 [1] CRAN (R 4.2.0)
+ vctrs          0.5.2      2023-01-23 [1] CRAN (R 4.2.0)
+ withr          2.5.0      2022-03-03 [1] CRAN (R 4.2.0)
+ workflows    * 1.1.2      2022-11-16 [1] CRAN (R 4.2.0)
+ workflowsets * 1.0.0      2022-07-12 [1] CRAN (R 4.2.0)
+ yardstick    * 1.1.0.9000 2023-01-27 [1] Github (tidymodels/yardstick@c268d5f)
+
+ [1] /Users/max/Library/R/x86_64/4.2/library
+ [2] /Library/Frameworks/R.framework/Versions/4.2/Resources/library
+
+──────────────────────────────────────────────────────────────────────────────
+> 
+> # ------------------------------------------------------------------------------
+> 
+> save(sim_res, file = file_name)
+> 
+> if (!interactive()) {
++   q("no")
++ }
+> proc.time()
+   user  system elapsed 
+ 63.364   1.908 691.921 
