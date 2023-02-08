@@ -15,15 +15,15 @@ template <- readLines("template.R")
 
 # ------------------------------------------------------------------------------
 
-num_sim <- 100
+num_sim <- 25
 
 set.seed(1)
 
 combinations <- 
   crossing(
-    model = c("mars", "cart"),
-    training = c(100, 1000),
-    eval = 500,
+    model = c("mars", "cart", "lm"),
+    training = c(100, 500, 1000, 5000),
+    eval = 1000,
     seed = sample.int(10^5, num_sim),
     conf = c(0.90, 0.95)
   ) %>% 
@@ -48,6 +48,7 @@ for (i in 1:nrow(combinations)) {
 # ------------------------------------------------------------------------------
 
 src_files <- list.files(path = "files", pattern = "^full.*R$")
+src_files <- sample(src_files)
 rda_files <- gsub("R$", "RData", src_files)
 
 # target_list <- 
