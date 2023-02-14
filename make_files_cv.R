@@ -11,28 +11,31 @@ options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
 
 # ------------------------------------------------------------------------------
 
-template <- readLines("template.R")
+template <- readLines("template_cv.R")
 
 # ------------------------------------------------------------------------------
 
 num_sim <- 25
 
-set.seed(1)
+# Seed 5071 all models x 25 sims, mlp's use 20 HU 
+set.seed(5071)
 
 combinations <- 
   crossing(
-    model = c("mars", "cart", "lm"),
-    training = c(100, 500, 1000, 5000),
+    model = c("mars", "mlp", "lm"),
+    training = c(500, 1000, 5000),
     eval = 1000,
     seed = sample.int(10^5, num_sim),
-    conf = c(0.90, 0.95)
+    conf = c(0.90, 0.95),
+    resamp = c("cv", "boot")
   ) %>% 
   mutate(
-    file = glue("files/full_{model}_{training}_{conf}_{seed}.R")
+    file = glue("files/cv_{model}_{resamp}_{training}_{conf}_{seed}.R")
   )
 
 new_file <- function(x, template) {
   template <- gsub("MODEL", x$model, template)
+  template <- gsub("RESAMP", x$resamp, template)  
   template <- gsub("NTRAIN", x$training, template)  
   template <- gsub("NEVAL", x$eval, template)  
   template <- gsub("SEED", x$seed, template)   
@@ -47,7 +50,7 @@ for (i in 1:nrow(combinations)) {
 
 # ------------------------------------------------------------------------------
 
-src_files <- list.files(path = "files", pattern = "^full.*R$")
+src_files <- list.files(path = "files", pattern = "^cv.*R$")
 src_files <- sample(src_files)
 rda_files <- gsub("R$", "RData", src_files)
 
