@@ -18,11 +18,12 @@ template <- readLines("template_cv.R")
 num_sim <- 25
 
 # Seed 5071 all models x 25 sims, mlp's use 20 HU 
+# Seed 4403 mlp only with 100 HU
 set.seed(5071)
 
 combinations <- 
   crossing(
-    model = c("mars", "mlp", "lm"),
+    model = "mlp",
     training = c(500, 1000, 5000),
     eval = 1000,
     seed = sample.int(10^5, num_sim),

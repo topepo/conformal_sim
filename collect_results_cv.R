@@ -46,7 +46,7 @@ res_coverage %>%
   filter(method != "lm_native") %>% 
   select(training_size, model, resample, conf_level, method, coverage) %>%
   ggplot(aes(x = training_size, y = coverage, col = resample)) +
-  geom_boxplot(position = position_dodge(width = 1)) +
+  geom_boxplot(position = position_dodge(width = 2 / 3), width = 1 / 2) +
   facet_grid(model ~ conf_level)
 
 res_coverage %>%
@@ -54,6 +54,9 @@ res_coverage %>%
   group_by(training_size, model, resample, conf_level, method) %>% 
   count() %>% 
   arrange(n)
+
+cat(round(length(rdata_files) / length(r_files) * 100, 2), "% finished\n")
+
 
 # ------------------------------------------------------------------------------
 
