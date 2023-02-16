@@ -16,7 +16,7 @@ n_new <- NEVAL
 seed <- SEED
 conf_level <- CONF
 conf_method <- "full"
-hidden_units <- 20
+hidden_units <- 100
 file_name <- glue("{conf_method}_{model}_{n}_{conf_level}_{seed}.RData")
 
 # ------------------------------------------------------------------------------

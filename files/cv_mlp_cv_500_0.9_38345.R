@@ -18,7 +18,7 @@ seed <- 38345
 conf_level <- 0.9
 resample_type <- "cv"
 conf_method <- "cv"
-hidden_units <- 100
+hidden_units <- 20
 file_name <- 
   glue("{conf_method}_{model}_{resample_type}_{n}_{conf_level}_{seed}.RData")
 

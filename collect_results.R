@@ -1,4 +1,3 @@
-
 library(tidymodels)
 library(glue)
 library(stringr)
@@ -9,7 +8,6 @@ tidymodels_prefer()
 theme_set(theme_bw())
 options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
 
-# ------------------------------------------------------------------------------
 
 get_res <- function(x) {
   load(x)
@@ -17,11 +15,15 @@ get_res <- function(x) {
   sim_res
 }
 
-rdata_files <- list.files(path = "files", pattern = "RData$", full.names = TRUE)
-r_files <- list.files(path = "files", pattern = "\\.R$", full.names = TRUE)
+# ------------------------------------------------------------------------------
+# CV results
 
-res_raw <- 
-  list.files(path = "files", pattern = "RData$", full.names = TRUE) %>% 
+rdata_cv_files <- list.files(path = "files", pattern = "^cv.*RData$", full.names = TRUE)
+r_cv_files <- list.files(path = "files", pattern = "^cv.*R$", full.names = TRUE)
+cat(round(length(rdata_cv_files) / length(r_cv_files) * 100, 2), "% finished\n")
+
+cv_raw <- 
+  rdata_cv_files %>% 
   map_dfr(get_res) %>% 
   mutate(
     out_of_bound = .pred_lower > outcome | .pred_upper < outcome,
@@ -29,9 +31,29 @@ res_raw <-
     int_width = .pred_upper - .pred_lower
   )
 
-res_coverage <- 
-  res_raw %>% 
-  group_by(training_size, model, conf_level, method, file) %>% 
+# ------------------------------------------------------------------------------
+# full results
+
+rdata_full_files <- list.files(path = "files", pattern = "^full.*RData$", full.names = TRUE)
+r_full_files <- list.files(path = "files", pattern = "^full.*R$", full.names = TRUE)
+cat(round(length(rdata_full_files) / length(r_full_files) * 100, 2), "% finished\n")
+
+full_raw <- 
+  rdata_full_files %>% 
+  map_dfr(get_res) %>% 
+  mutate(
+    out_of_bound = .pred_lower > outcome | .pred_upper < outcome,
+    no_result = is.na(.pred_lower) | is.na(.pred_upper),
+    int_width = .pred_upper - .pred_lower
+  ) %>% 
+  mutate(resample = "none")
+
+
+# ------------------------------------------------------------------------------
+
+coverage_dat <- 
+  bind_rows(cv_raw, full_raw) %>% 
+  group_by(training_size, model, resample, conf_level, method, file) %>% 
   summarize(
     coverage = mean(!out_of_bound, na.rm = TRUE),
     failure = mean(no_result, na.rm = TRUE),
@@ -42,88 +64,19 @@ res_coverage <-
     training_size = format(training_size)
   ) 
 
-res_coverage %>%
-  filter(method != "lm_native") %>% 
-  select(training_size, model, conf_level, method, coverage) %>%
-  ggplot(aes(x = training_size, y = coverage, col = method)) +
-  geom_boxplot(position = position_dodge(width = 1)) +
-  facet_grid(model ~ conf_level)
+coverage_dat %>%
+  filter(method != "lm_native" & conf_level == 0.9) %>% 
+  select(training_size, model, resample, method, coverage) %>%
+  ggplot(aes(x = training_size, y = coverage, col = resample)) + 
+  geom_hline(yintercept = 0.9) +
+  geom_boxplot(position = position_dodge(width = 2 / 3), width = 1 / 2) +
+  facet_grid(model ~ method)
 
-# ------------------------------------------------------------------------------
-
-
-res_width_mean <- 
-  res_raw %>% 
-  group_by(method, training_size, model, conf_level) %>% 
-  summarize(
-    mean_width = mean(int_width, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-res_width_diff <- 
-  res_raw %>%
-  select(method, training_size, model, conf_level, int_width, .row, file) %>%
-  pivot_wider(
-    id_cols = c(training_size, model, conf_level, .row, file),
-    names_from = "method",
-    values_from = "int_width"
-  ) %>% 
-  mutate(
-    grid_vs_search = grid - search,
-    lm_vs_lm_search = lm_native - search,
-    lm_vs_lm_grid = lm_native - grid,
-  ) 
-
-res_width_diff %>%
-  select(training_size, conf_level, 
-         search = lm_vs_lm_search, grid = lm_vs_lm_grid) %>%
-  pivot_longer(c(search, grid), names_to = "method", values_to = "difference") %>% 
-  filter(!is.na(difference)) %>% 
-  mutate(
-    training_size = format(training_size)
-  ) %>% 
-  ggplot(aes(x = training_size, y = difference)) +
-  geom_boxplot(position = position_dodge()) +
-  geom_hline(yintercept = 0, col = "green", lty = 2) +
-  facet_grid(method ~ conf_level) +
-  labs(y = "parametric - conformal")
-
-# ------------------------------------------------------------------------------
-
-res_time_folds <- 
-  res_raw %>%
-  select(method, training_size, model, conf_level, time, .row, file) %>%
-  pivot_wider(
-    id_cols = c(training_size, model, conf_level, .row, file),
-    names_from = "method",
-    values_from = "time"
-  ) %>% 
-  mutate(
-    grid_vs_search = grid/search
-  ) 
-
-res_time_folds %>%
-  select(training_size, conf_level, fold = grid_vs_search) %>%
-  mutate(
-    training_size = format(training_size)
-  ) %>% 
-  ggplot(aes(x = training_size, y = fold)) +
-  geom_boxplot(position = position_dodge()) +
-  geom_hline(yintercept = 1, col = "red", lty = 2) +
-  facet_wrap(~ conf_level) +
-  scale_y_continuous(trans = log2_trans()) +
-  labs(y = "Search speedup over grid")
-
-
-res_raw %>%
-  filter(method != "lm_native") %>% 
-  mutate(time_per_x = time / 500) %>% 
-  group_by(training_size, method, model) %>% 
-  summarize(time_per_x = mean(time_per_x), .groups = "drop") %>% 
-  ggplot(aes(training_size, time_per_x, col = model)) + 
-  geom_point() +
-  geom_line() +
-  facet_wrap(~ method) +
-  scale_x_log10()
-
+coverage_dat %>%
+  filter(method != "lm_native" & conf_level == 0.95) %>% 
+  select(training_size, model, resample, method, coverage) %>%
+  ggplot(aes(x = training_size, y = coverage, col = resample)) + 
+  geom_hline(yintercept = 0.95) +
+  geom_boxplot(position = position_dodge(width = 2 / 3), width = 1 / 2) +
+  facet_grid(model ~ method)
 

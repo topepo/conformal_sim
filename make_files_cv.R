@@ -1,4 +1,3 @@
-
 library(tidymodels)
 library(glue)
 library(stringr)
@@ -18,8 +17,8 @@ template <- readLines("template_cv.R")
 num_sim <- 25
 
 # Seed 5071 all models x 25 sims, mlp's use 20 HU 
-# Seed 4403 mlp only with 100 HU
-set.seed(5071)
+# Seed 4403 mlp x 25 sims only with 100 HU
+set.seed(4403)
 
 combinations <- 
   crossing(
@@ -48,49 +47,4 @@ new_file <- function(x, template) {
 for (i in 1:nrow(combinations)) {
   new_file(combinations[i,], template)
 }
-
-# ------------------------------------------------------------------------------
-
-src_files <- list.files(path = "files", pattern = "^cv.*R$")
-src_files <- sample(src_files)
-rda_files <- gsub("R$", "RData", src_files)
-
-# target_list <- 
-#   paste(rda_files, collapse = " ") %>% 
-#   str_wrap() %>% 
-#   str_split("\n") 
-
-# target_list <- paste0("\t", target_list[[1]], collapse = " \\ \n")
-
-target_list <- paste0(rda_files, collapse = " ")
-
-target_list <- paste0("all: ", target_list, "\n\n")
-
-instruct <- function(src_file) {
-  glue(
-"
-{src_file}Data: {src_file} 
-\t@date '+ %Y-%m-%d %H:%M:%S: + {src_file}'
-\t@$(RCMD) BATCH --vanilla {src_file}
-\t@date '+ %Y-%m-%d %H:%M:%S: - {src_file}'
-
-"
-  )
-}
-
-instructions <- map_chr(src_files, instruct)
-instructions <- paste0(instructions, collapse = "\n")
-
-header <- 
-"SHELL = /bin/bash
-R    ?= R 
-RCMD  =@$(R) CMD
-TIMESTAMP = $(shell  date '+%Y-%m-%d-%H-%M')
-here=${PWD}/..
-"
-
-cat(header, file = "files/makefile", sep = "")
-
-cat(target_list, file = "files/makefile", append = TRUE, sep = "")
-cat(instructions, file = "files/makefile", append = TRUE, sep = "")
 
