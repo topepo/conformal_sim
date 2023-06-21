@@ -1,134 +1,194 @@
 library(tidymodels)
-library(conformity)
-library(future)
+library(probably)
 library(glue)
 
 # ------------------------------------------------------------------------------
 
 tidymodels_prefer()
-plan("multisession")
 
 # ------------------------------------------------------------------------------
 
 model <- "MODEL"
+resampling <- "RESAMPLE"
 n <- NTRAIN
 n_new <- NEVAL
 seed <- SEED
 conf_level <- CONF
-conf_method <- "full"
-file_name <- glue("{conf_method}_{model}_{n}_{conf_level}_{seed}.RData")
+file_name <- glue("{model}_{n}_{conf_level}_{resampling}_{seed}.RData")
 
 # ------------------------------------------------------------------------------
 
 set.seed(seed)
 sim_train <- sim_regression(n, method = "hooker_2004", keep_truth = FALSE)
-sim_new <- sim_regression(n_new, method = "hooker_2004", keep_truth = TRUE)
+sim_cal   <- sim_regression(500, method = "hooker_2004", keep_truth = FALSE)
+sim_new   <- sim_regression(n_new, method = "hooker_2004", keep_truth = TRUE)
 sim_new_pred <- sim_new %>% select(-outcome, -.truth)
 
 # ------------------------------------------------------------------------------
 
-if (model == "mars") {
+rs_split <- strsplit(resampling, "-")[[1]]
+rs_type <- rs_split[1]
+rs_num <- as.numeric(rs_split[2])
+
+set.seed(seed + 1)
+if (rs_type == "cv") {
+  if (rs_num == 1) {
+    sim_rs <- vfold_cv(sim_train)
+  } else {
+    sim_rs <- vfold_cv(sim_train, repeats = rs_num)
+  }
+} else if (rs_type == "boot") {
+  sim_rs <- bootstraps(sim_train, times = rs_num)
+} 
+
+# ------------------------------------------------------------------------------
+
+rec <-
+  recipe(outcome ~ ., data = sim_train) %>%
+  step_normalize(all_predictors())
+
+if (model == "cubist") {
   
-  mars_wflow <-
+  library(rules)
+  model_wflow <-
     workflow() %>%
     add_formula(outcome ~ .) %>%
-    add_model(mars() %>% set_mode("regression"))
+    add_model(cubist_rules(committees = 20, neighbors = 7))
   
-  mod_fit <- fit(mars_wflow, sim_train)
+} else if (model == "nnet") {
   
-} else if (model == "svm") {
-  
-  rec <-
-    recipe(outcome ~ ., data = sim_train) %>%
-    step_normalize(all_predictors())
-  
-  svm_wflow <-
+  model_wflow <-
     workflow() %>%
     add_recipe(rec) %>%
-    add_model(svm_rbf() %>% set_mode("regression"))
+    add_model(mlp(hidden_units = 7, penalty = 0) %>% set_mode("regression"))
   
-  mod_fit <- fit(svm_wflow, sim_train)
+} else if (model == "nnet_overfit") {
+  
+  nnet_spec <- 
+    mlp(hidden_units = 50, penalty = 0) %>% 
+    set_mode("regression") 
+  
+  model_wflow <-
+    workflow() %>%
+    add_recipe(rec) %>%
+    add_model(nnet_spec)
   
 } else if (model == "cart") {
   
-  cart_wflow <-
+  model_wflow <-
     workflow() %>%
     add_formula(outcome ~ .) %>%
     add_model(decision_tree() %>% set_mode("regression"))
   
-  mod_fit <- fit(cart_wflow, sim_train)
-  
 } else if (model == "lm") {
   
-  lm_wflow <-
+  model_wflow <-
     workflow() %>%
     add_formula(outcome ~ .) %>%
     add_model(linear_reg())
-  
-  mod_fit <- fit(lm_wflow, sim_train)
-  
 }
 
 # ------------------------------------------------------------------------------
 
-time_search <-
+mod_fit <- fit(model_wflow, sim_train)
+
+# ------------------------------------------------------------------------------
+# split sample inference
+
+time_split <-
   system.time({
-    res_search <-
-      int_conformal_infer(mod_fit,
-                          sim_new_pred,
-                          level = conf_level,
-                          train_data = sim_train)
+    int_split <-
+      int_conformal_infer_split(mod_fit, cal = sim_cal)
   })
 
-res_search <-
-  res_search %>%
+pred_split <- 
+  predict(int_split, sim_new, level = conf_level) %>%
   bind_cols(sim_new %>% select(.truth, outcome)) %>% 
-  add_rowindex() %>% 
+  add_rowindex()
+
+res_split <-
+  pred_split %>% 
   mutate(
-    method = "search",
+    method = "split",
     seed = seed,
     training_size = n,
     eval_size = n_new,
+    cal_size = nrow(sim_cal),
+    resampling = "none",
+    resamples = nrow(sim_rs),
     model = model,
     conf_level = conf_level,
-    workers = unname(future::nbrOfWorkers()),
-    time = time_search[3] 
+    time = time_split[3] 
   )
 
 # ------------------------------------------------------------------------------
+# quantile inference
 
-ctrl_grid <- control_conformal_infer(method = "grid")
-
-time_grid <-
+time_quant <-
   system.time({
-    res_grid <-
-      int_conformal_infer(
-        mod_fit,
-        sim_new_pred,
-        level = conf_level,
-        control = ctrl_grid,
-        train_data = sim_train
+    int_quant <-
+      int_conformal_infer_quantile(
+        mod_fit, 
+        train_data = sim_train,  
+        cal_data = sim_cal, 
+        level = conf_level
       )
   })
 
-res_grid <-
-  res_grid %>%
+pred_quant <- 
+  predict(int_quant, sim_new) %>%
   bind_cols(sim_new %>% select(.truth, outcome)) %>% 
-  add_rowindex() %>% 
+  add_rowindex()
+
+res_quant <-
+  pred_quant %>% 
   mutate(
-    method = "grid",
+    method = "quantile",
     seed = seed,
     training_size = n,
     eval_size = n_new,
+    cal_size = nrow(sim_cal),
+    resampling = "none",
+    resamples = nrow(sim_rs),
     model = model,
     conf_level = conf_level,
-    workers = unname(future::nbrOfWorkers()),
-    time = time_grid[3] 
+    time = time_quant[3] 
+  )
+
+# ------------------------------------------------------------------------------
+# cv+ inference
+
+ctrl <- control_resamples(save_pred = TRUE, save_workflow = TRUE, extract = I)
+
+time_cv <-
+  system.time({
+    mod_rs <- fit_resamples(model_wflow, sim_rs, control = ctrl)
+    int_cv <- int_conformal_infer_cv(mod_rs)
+  })
+
+pred_cv <- 
+  predict(int_cv, sim_new, level = conf_level) %>%
+  bind_cols(sim_new %>% select(.truth, outcome)) %>% 
+  add_rowindex()
+
+res_cv <-
+  pred_cv %>% 
+  mutate(
+    method = "cv+",
+    seed = seed,
+    training_size = n,
+    eval_size = n_new,
+    cal_size = nrow(sim_cal),
+    resampling = "RESAMPLE",
+    resamples = nrow(sim_rs),
+    model = model,
+    conf_level = conf_level,
+    time = time_cv[3] 
   )
 
 # ------------------------------------------------------------------------------
 
-sim_res <- bind_rows(res_search, res_grid)
+sim_res <- bind_rows(res_split, res_quant, res_cv)
 
 # ------------------------------------------------------------------------------
 
@@ -144,9 +204,10 @@ if (model == "lm") {
       seed = seed,
       training_size = n,
       eval_size = n_new,
+      resampling = "RESAMPLE",
+      resamples = nrow(sim_rs),
       model = model,
       conf_level = conf_level,
-      workers = NA_integer_,
       time = NA_real_ 
     )
   sim_res <- bind_rows(sim_res, res_lm)

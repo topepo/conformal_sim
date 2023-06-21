@@ -26,12 +26,15 @@ res_raw <-
   mutate(
     out_of_bound = .pred_lower > outcome | .pred_upper < outcome,
     no_result = is.na(.pred_lower) | is.na(.pred_upper),
-    int_width = .pred_upper - .pred_lower
+    int_width = .pred_upper - .pred_lower,
+    model = ifelse(model == "nnet_overfit", "nnet (overfit)", model)
   )
+
+# TODO the non-cv+ results are replicated so get the unique values (or slice on seed)
 
 res_coverage <- 
   res_raw %>% 
-  group_by(training_size, model, conf_level, method, file) %>% 
+  group_by(training_size, model, conf_level, method, resampling, resamples, file) %>% 
   summarize(
     coverage = mean(!out_of_bound, na.rm = TRUE),
     failure = mean(no_result, na.rm = TRUE),
@@ -43,10 +46,29 @@ res_coverage <-
   ) 
 
 res_coverage %>%
-  filter(method != "lm_native") %>% 
-  select(training_size, model, conf_level, method, coverage) %>%
-  ggplot(aes(x = training_size, y = coverage, col = method)) +
-  geom_boxplot(position = position_dodge(width = 1)) +
+  select(training_size, model, conf_level, method, resampling, coverage) %>%
+  summarize(
+    coverage = mean(coverage),
+    .by = c(training_size, model, conf_level, method, resampling)
+  ) %>% 
+  filter(resampling %in% c("none", "cv") & method != "lm_native") %>% 
+  ggplot(aes(x = training_size, y = coverage, col = method)) + 
+  geom_hline(aes(yintercept = conf_level), lty = 3) +
+  geom_point() +
+  geom_line(aes(group = method)) +
+  facet_grid(model ~ conf_level)
+
+res_coverage %>%
+  select(training_size, model, conf_level, method, resampling, coverage) %>%
+  summarize(
+    coverage = mean(coverage),
+    .by = c(training_size, model, conf_level, method, resampling)
+  ) %>% 
+  filter(!(resampling %in% c("none", "cv")) & method == "cv+") %>% 
+  ggplot(aes(x = training_size, y = coverage, col = resampling)) + 
+  geom_hline(aes(yintercept = conf_level), lty = 3) +
+  geom_point() +
+  geom_line(aes(group = resampling)) +
   facet_grid(model ~ conf_level)
 
 # ------------------------------------------------------------------------------
