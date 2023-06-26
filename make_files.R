@@ -15,7 +15,7 @@ template <- readLines("template.R")
 
 # ------------------------------------------------------------------------------
 
-num_sim <- 50
+num_sim <- 25
 
 set.seed(1)
 
@@ -26,7 +26,7 @@ combinations <-
                  "boot-10", "boot-20", "boot-30", "boot-40", "boot-50"),
     training = c(500, 1000, 5000, 10000),
     eval = 1000,
-    seed = sample.int(10^5, num_sim),
+    seed = 1:num_sim,
     conf = c(0.90, 0.95)
   ) %>% 
   mutate(
