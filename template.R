@@ -98,7 +98,7 @@ mod_fit <- fit(model_wflow, sim_train)
 time_split <-
   system.time({
     int_split <-
-      int_conformal_infer_split(mod_fit, cal = sim_cal)
+      int_conformal_split(mod_fit, cal = sim_cal)
   })
 
 pred_split <- 
@@ -127,7 +127,7 @@ res_split <-
 time_quant <-
   system.time({
     int_quant <-
-      int_conformal_infer_quantile(
+      int_conformal_quantile(
         mod_fit, 
         train_data = sim_train,  
         cal_data = sim_cal, 
@@ -163,7 +163,7 @@ ctrl <- control_resamples(save_pred = TRUE, save_workflow = TRUE, extract = I)
 time_cv <-
   system.time({
     mod_rs <- fit_resamples(model_wflow, sim_rs, control = ctrl)
-    int_cv <- int_conformal_infer_cv(mod_rs)
+    int_cv <- int_conformal_cv(mod_rs)
   })
 
 pred_cv <- 

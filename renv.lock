@@ -1113,15 +1113,23 @@
     },
     "rules": {
       "Package": "rules",
-      "Version": "1.0.2.9000",
-      "Source": "GitHub",
-      "RemoteType": "github",
-      "RemoteHost": "api.github.com",
-      "RemoteUsername": "tidymodels",
-      "RemoteRepo": "rules",
-      "RemoteRef": "main",
-      "RemoteSha": "3eb80fbfa4d81d9376a6fcb1707cd5beac3b770c",
-      "Hash": "c18a89c92b8c21488262a8e891ae2cf7"
+      "Version": "1.0.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "dials",
+        "dplyr",
+        "generics",
+        "parsnip",
+        "purrr",
+        "rlang",
+        "stats",
+        "stringr",
+        "tidyr",
+        "utils"
+      ],
+      "Hash": "cbd971b6537943f1177d4562cd23276e"
     },
     "scales": {
       "Package": "scales",
