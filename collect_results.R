@@ -9,10 +9,6 @@ tidymodels_prefer()
 theme_set(theme_bw())
 options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
 
-rs_cols <- RColorBrewer::brewer.pal(9, "YlOrRd")[-(1:2)]
-mth_cols <- RColorBrewer::brewer.pal(3, "Dark2")
-mth_lvl <- c("split", "quantile", "cv+")
-
 # ------------------------------------------------------------------------------
 
 get_res <- function(x) {
@@ -104,85 +100,9 @@ lm_comparison <-
 
 # ------------------------------------------------------------------------------
 
-basic_coverage %>% 
-  filter(method != "lm_native") %>% 
-  ggplot(aes(x = training_size, y = coverage, col = method, pch = method)) + 
-  geom_hline(aes(yintercept = conf_level), lty = 3) +
-  geom_point(cex = 3 / 4) +
-  geom_line(aes(group = method)) +
-  facet_grid(model ~ conf_level) +
-  lims(y = 0:1) +
-  scale_color_manual(values = mth_cols)
-
-basic_coverage %>% 
-  filter(method != "lm_native") %>% 
-  ggplot(aes(x = training_size, y = coverage, col = method, pch = method)) + 
-  geom_hline(aes(yintercept = conf_level), lty = 3) +
-  geom_point(cex = 3 / 4) +
-  geom_line(aes(group = method)) +
-  facet_grid(model ~ conf_level) +
-  scale_color_manual(values = mth_cols)
+save(lm_comparison, basic_coverage, file = "simulation_results.RData")
 
 # ------------------------------------------------------------------------------
 
-
-resampled_coverage %>% 
-  filter(resampling == "Cross-Validation" & method != "lm_native") %>% 
-  mutate(`number of resamples` = format(resamples)) %>% 
-  ggplot(
-    aes(
-      x = training_size,
-      y = coverage,
-      col = `number of resamples`,
-      group = `number of resamples`,
-      pch = `number of resamples`
-    )
-  ) +
-  geom_hline(aes(yintercept = conf_level), lty = 3) +
-  geom_point(cex = 3 / 4) +
-  geom_line() +
-  facet_grid(model ~ conf_level) +
-  scale_color_manual(values = rs_cols) 
-
-resampled_coverage %>% 
-  filter(resampling == "Bootstrap" & method != "lm_native") %>% 
-  mutate(`number of resamples` = format(resamples)) %>% 
-  ggplot(
-    aes(
-      x = training_size,
-      y = coverage,
-      col = `number of resamples`,
-      group = `number of resamples`,
-      pch = `number of resamples`
-    )
-  ) +
-  geom_hline(aes(yintercept = conf_level), lty = 3) +
-  geom_point(cex = 3 / 4) +
-  geom_line() +
-  facet_grid(model ~ conf_level) +
-  scale_color_manual(values = rs_cols)
-
-# ------------------------------------------------------------------------------
-
-
-lm_comparison %>% 
-  ggplot(aes(x = training_size, y = coverage, col = method)) + 
-  geom_hline(yintercept = 0, lty = 3) +
-  geom_point() +
-  geom_line(aes(group = method)) +
-  facet_wrap( ~ conf_level) +
-  scale_y_continuous(labels = scales::percent) + 
-  labs(y = "conformal - parametric", title = "coverage") +
-  scale_color_manual(values = mth_cols)
-
-lm_comparison %>% 
-  ggplot(aes(x = training_size, y = width, col = method)) + 
-  geom_hline(yintercept = 0, lty = 3) +
-  geom_point() +
-  geom_line(aes(group = method)) +
-  facet_wrap( ~ conf_level) +
-  scale_y_continuous(labels = scales::percent) +
-  labs(y = "conformal - parametric", title = "interval width") +
-  scale_color_manual(values = mth_cols)
-
+sessioninfo::session_info()
 

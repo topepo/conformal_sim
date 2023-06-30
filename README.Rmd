@@ -3,14 +3,59 @@ title: "Simulations for Conformal Inference in the probably Package"
 date: "2023-06-30"
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+    comment = "#>",
+    fig.align = 'center',
+    fig.path = "figures/",
+    fig.width = 7,
+    fig.height = 7,
+    out.width = "95%",
+    dev = 'svg',
+    dev.args = list(bg = "transparent"),
+    tidy = FALSE,
+    echo = FALSE
+  )
 
+# ------------------------------------------------------------------------------
+
+library(tidymodels)
+
+# ------------------------------------------------------------------------------
+
+tidymodels_prefer()
+theme_set(theme_bw())
+options(pillar.advice = FALSE, pillar.min_title_chars = Inf)
+
+# ------------------------------------------------------------------------------
+
+rs_cols <- RColorBrewer::brewer.pal(9, "YlOrRd")[-(1:2)]
+mth_cols <- RColorBrewer::brewer.pal(3, "Dark2")
+mth_lvl <- c("split", "quantile", "cv+")
+
+# ------------------------------------------------------------------------------
+
+load("simulation_results.RData")
+
+lvls <- 
+  unique(basic_coverage$conf_level * 100) %>% 
+  paste0("%") %>% 
+  knitr::combine_words()
+
+training <- 
+  unique(basic_coverage$training_size) %>% 
+  sort() %>% 
+  format(big.mark = ",") %>% 
+  knitr::combine_words()
+
+```
 
 The `probably` package has several functions that can produce prediction intervals using conformal inference. This repo has some simulations to evaluate coverage properties for our implementations. 
 
 The factors in the simulations
 
- - Confidence level: 90% and 95%.
- - Size of the training sets:    500,  1000,  5000, and 10000.
+ - Confidence level: `r lvls`.
+ - Size of the training sets:  `r training`.
  - The type and amount of resampling (CV+ method only, see below). 
  - The model type: 
    - CART trees (default parameters),
@@ -22,7 +67,11 @@ Each combination of settings was repeated 25 times. The "mean coverage" statisti
 
 The data were simulated using the method detailed in Hooker (2004) and Sorokina _et al._ (2008) with a prediction function of 
 
-<img src="figures/equation.png" alt="plot of chunk unnamed-chunk-1" width="95%" style="display: block; margin: auto;" />
+```{r}
+#| echo: false
+
+knitr::include_graphics("figures/equation.png")
+```
 
 Predictors 1, 2, 3, 6, 7, and 9 are standard uniform while the others are uniform on `[0.6, 1.0]`. The errors are normal with mean zero and default standard deviation of 0.25. Note that this method simulates a constant error term (e.g., homoscedasticity), which will come into play when quantile regression is used. 
 
@@ -36,17 +85,56 @@ Each section below evaluated the coverage properties for each conformal method.
 
 The coverage results from using `int_conformal_split()` where: 
 
-<img src="figures/split-coverage-1.svg" alt="plot of chunk split-coverage" width="95%" style="display: block; margin: auto;" />
+```{r}
+#| label: split-coverage
+#| 
+
+basic_coverage %>% 
+  filter(method == "split") %>% 
+  ggplot(aes(x = training_size, y = coverage)) + 
+  geom_hline(aes(yintercept = conf_level), lty = 3) +
+  geom_point() +
+  facet_grid(model ~ conf_level) +
+  labs(x = "Training Set Size", y = "Mean Coverage")
+```
 
 We can also compare the conformal intervals for those produced naturally when ordinary least squares (OLS) is used to fit the model (with the usual normality assumptions on the residuals). We can assess both the difference in coverage and interval width. The simple differences in coverage were: 
 
-<img src="figures/split-coverage-lm-1.svg" alt="plot of chunk split-coverage-lm" width="95%" style="display: block; margin: auto;" />
+```{r}
+#| label: split-coverage-lm
+#| fig.height: 7
+#| fig.width: 4
+
+lm_comparison %>% 
+  filter(method == "split") %>% 
+  ggplot(aes(x = training_size, y = coverage)) + 
+  geom_hline(yintercept = 0, lty = 3) +
+  geom_point() +
+  facet_wrap( ~ conf_level) +
+  scale_y_continuous(labels = scales::percent) + 
+  labs(y = "Conformal - Parametric", title = "coverage") +
+  labs(x = "Training Set Size")
+```
 
 While the coverage for 90% intervals was lower for this conformal method, the scale of the y-axis indicates that it is a meager difference.
 
 The percent differences in the widths of the intervals were:
 
-<img src="figures/split-width-lm-1.svg" alt="plot of chunk split-width-lm" width="95%" style="display: block; margin: auto;" />
+```{r}
+#| label: split-width-lm
+#| fig.height: 7
+#| fig.width: 4
+
+lm_comparison %>% 
+  filter(method == "split") %>% 
+  ggplot(aes(x = training_size, y = width)) + 
+  geom_hline(yintercept = 0, lty = 3) +
+  geom_point() +
+  facet_wrap( ~ conf_level) +
+  scale_y_continuous(labels = scales::percent) + 
+  labs(y = "conformal - parametric", title = "coverage") +
+  labs(x = "Training Set Size")
+```
 
 We might expect the parametric intervals for be more narrow. The 90% intervals show the opposite but this is a 2% difference (at most). 
 
