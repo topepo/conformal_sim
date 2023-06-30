@@ -40,13 +40,13 @@ The coverage results from using `int_conformal_split()` were:
 
 We can also compare the conformal intervals for those produced naturally when ordinary least squares (OLS) is used to fit the model (with the usual normality assumptions on the residuals). We can assess both the difference in coverage and interval width. The simple differences in coverage were: 
 
-<img src="figures/split-coverage-lm-1.svg" alt="plot of chunk split-coverage-lm" width="55%" style="display: block; margin: auto;" />
+<img src="figures/split-coverage-lm-1.svg" alt="plot of chunk split-coverage-lm" width="70%" style="display: block; margin: auto;" />
 
 While the coverage for 90% intervals was lower for this conformal method, the scale of the y-axis indicates that it is a meager difference.
 
 The percent differences in the widths of the intervals were:
 
-<img src="figures/split-width-lm-1.svg" alt="plot of chunk split-width-lm" width="55%" style="display: block; margin: auto;" />
+<img src="figures/split-width-lm-1.svg" alt="plot of chunk split-width-lm" width="70%" style="display: block; margin: auto;" />
 
 We might expect the parametric intervals for be more narrow. The 90% intervals show the opposite but this is a 2% difference (at most). 
 
@@ -60,11 +60,11 @@ The smallest training set result appears to have slightly high coverage. Recall 
 
 To again compare this method to the parametric OLS interval methods, the simple differences in coverage show definite systematic trends that show the coverage changes as the training set size changes. 
 
-<img src="figures/quantile-coverage-lm-1.svg" alt="plot of chunk quantile-coverage-lm" width="55%" style="display: block; margin: auto;" />
+<img src="figures/quantile-coverage-lm-1.svg" alt="plot of chunk quantile-coverage-lm" width="70%" style="display: block; margin: auto;" />
 
 The percent differences in the widths of the intervals were:
 
-<img src="figures/quantile-width-lm-1.svg" alt="plot of chunk quantile-width-lm" width="55%" style="display: block; margin: auto;" />
+<img src="figures/quantile-width-lm-1.svg" alt="plot of chunk quantile-width-lm" width="70%" style="display: block; margin: auto;" />
 
 This is not too surprising; the method is not consistent with how these data are generated. In a way, this might be the worst-case result. 
 

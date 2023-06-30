@@ -87,7 +87,7 @@ The coverage results from using `int_conformal_split()` were:
 
 ```{r}
 #| label: split-coverage
-#| 
+#| fig.align: 'center'
 
 basic_coverage %>% 
   filter(method == "split") %>% 
@@ -104,7 +104,8 @@ We can also compare the conformal intervals for those produced naturally when or
 #| label: split-coverage-lm
 #| fig.height: 4
 #| fig.width: 7
-#| out.width: "55%"
+#| fig.align: 'center'
+#| out.width: "70%"
 
 lm_comparison %>% 
   filter(method == "split") %>% 
@@ -125,7 +126,8 @@ The percent differences in the widths of the intervals were:
 #| label: split-width-lm
 #| fig.height: 4
 #| fig.width: 7
-#| out.width: "55%"
+#| fig.align: 'center'
+#| out.width: "70%"
 
 lm_comparison %>% 
   filter(method == "split") %>% 
@@ -146,7 +148,7 @@ We might expect the parametric intervals for be more narrow. The 90% intervals s
 
 ```{r}
 #| label: quantile-coverage
-#| 
+#| fig.align: 'center'
 
 basic_coverage %>% 
   filter(method == "quantile") %>% 
@@ -165,7 +167,8 @@ To again compare this method to the parametric OLS interval methods, the simple 
 #| label: quantile-coverage-lm
 #| fig.height: 4
 #| fig.width: 7
-#| out.width: "55%"
+#| fig.align: 'center'
+#| out.width: "70%"
 
 lm_comparison %>% 
   filter(method == "quantile") %>% 
@@ -184,7 +187,8 @@ The percent differences in the widths of the intervals were:
 #| label: quantile-width-lm
 #| fig.height: 4
 #| fig.width: 7
-#| out.width: "55%"
+#| fig.align: 'center'
+#| out.width: "70%"
 
 lm_comparison %>% 
   filter(method == "quantile") %>% 
