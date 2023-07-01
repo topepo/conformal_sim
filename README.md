@@ -119,7 +119,7 @@ For repeated cross-validation, we can look at different amounts of resampling (f
 
 <img src="figures/cv-resamples-coverage-1.svg" alt="plot of chunk cv-resamples-coverage" width="75%" style="display: block; margin: auto;" />
 
-Again, the results are model-dependent, with the worst results being the  neural network. Coverage convergences, for this simulation, around 5K or 10K training set samples. 
+Again, the results are model-dependent, with the worst results being the  neural network and CART models. Coverage converges, for this simulation, around 5K or 10K training set samples. 
 
 What if the bootstrap is used to resample the model, using varying amounts of resamples? The results are: 
 
