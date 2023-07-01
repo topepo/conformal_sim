@@ -8,7 +8,7 @@ knitr::opts_chunk$set(
     comment = "#>",
     fig.align = 'center',
     fig.path = "figures/",
-    fig.width = 6,
+    fig.width = 5,
     fig.height = 6,
     out.width = "75%",
     dev = 'svg',
@@ -151,7 +151,7 @@ We can also compare the conformal intervals for those produced naturally when or
 ```{r}
 #| label: split-coverage-lm
 #| fig.height: 4
-#| fig.width: 7
+#| fig.width: 6
 #| fig.align: 'center'
 #| out.width: "70%"
 
@@ -172,7 +172,7 @@ The percent differences in the widths of the intervals were:
 ```{r}
 #| label: split-width-lm
 #| fig.height: 4
-#| fig.width: 7
+#| fig.width: 6
 #| fig.align: 'center'
 #| out.width: "70%"
 
@@ -213,7 +213,7 @@ To again compare this method to the parametric OLS interval methods, the simple 
 ```{r}
 #| label: quantile-coverage-lm
 #| fig.height: 4
-#| fig.width: 7
+#| fig.width: 6
 #| fig.align: 'center'
 #| out.width: "70%"
 
@@ -232,7 +232,7 @@ The percent differences in the widths of the intervals were:
 ```{r}
 #| label: quantile-width-lm
 #| fig.height: 4
-#| fig.width: 7
+#| fig.width: 6
 #| fig.align: 'center'
 #| out.width: "70%"
 
@@ -274,7 +274,7 @@ When compared with the OLS intervals, the results are interesting:
 ```{r}
 #| label: cv-coverage-lm
 #| fig.height: 4
-#| fig.width: 7
+#| fig.width: 6
 #| fig.align: 'center'
 #| out.width: "70%"
 
@@ -293,7 +293,7 @@ The percent differences in the widths of the intervals were:
 ```{r}
 #| label: cv-width-lm
 #| fig.height: 4
-#| fig.width: 7
+#| fig.width: 6
 #| fig.align: 'center'
 #| out.width: "70%"
 
@@ -332,7 +332,7 @@ resampled_coverage %>%
   labs(x = "Training Set Size", y = "Mean Coverage")
 ```
 
-Again, the results are model-dependent, with the worst results being the overfit neural network. Coverage convergences, for this simulation, around 5K or 10K training set samples. 
+Again, the results are model-dependent, with the worst results being the  neural network. Coverage convergences, for this simulation, around 5K or 10K training set samples. 
 
 What if the bootstrap is used to resample the model, using varying amounts of resamples? The results are: 
 
@@ -355,7 +355,7 @@ resampled_coverage %>%
 
 These look a lot like the cross-validation results.
 
-More resamples certainly improves coverage and the bootstrap appears to have slightly better coverage as 10-fold cross=validation. 
+More resamples certainly improves coverage and the bootstrap appears to have slightly better coverage as 10-fold cross-validation. 
 
 ## References
 
