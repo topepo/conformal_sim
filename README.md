@@ -71,18 +71,37 @@ This is not too surprising; the method is not consistent with how these data are
 
 ## CV+
 
-For cross-validation, the simulations focused on V-fold cross-validation with V = 10. 
+For cross-validation, the simulations focused on V-fold cross-validation with V = 10. For this method, using `int_conformal_cv()`, the coverage results are not great with smaller training set sizes and _some_ models:
 
-These results show TODO when compared with the OLS intervals: 
+<img src="figures/cv-coverage-1.svg" alt="plot of chunk cv-coverage" width="75%" style="display: block; margin: auto;" />
 
+This _may_ be related to how this method centers the intervals: the interval center is the average of the predictions from the 10 held-out models. It could be that, for some models, the average held-out new prediction is not centered in the right place. 
+
+When compared with the OLS intervals, the results are interesting: 
+
+<img src="figures/cv-coverage-lm-1.svg" alt="plot of chunk cv-coverage-lm" width="70%" style="display: block; margin: auto;" />
+
+The percent differences in the widths of the intervals were:
+
+<img src="figures/cv-width-lm-1.svg" alt="plot of chunk cv-width-lm" width="70%" style="display: block; margin: auto;" />
+
+For OLS models, the results look pretty good. This is an underfit model though; perhaps the issue is related to model complexity. 
+
+## More Resamples
 
 The methodology has only been derived for simple cross-validation. How does it work when other methods are used? For example, we could also use repeated 10-fold cross-validation as well as another method such as the bootstrap. 
 
-For repeated cross-validation, 
+For repeated cross-validation, we can look at different amounts of resampling (from two to five repeats). The coverage: 
 
-If the bootstrap is used to resample the model, using varying amounts of resamples, there results are: 
+<img src="figures/cv-resamples-coverage-1.svg" alt="plot of chunk cv-resamples-coverage" width="75%" style="display: block; margin: auto;" />
 
+Again, the results are model-dependent, with the worst results being the overfit neural network. Coverage convergences, for this simulation, around 5K or 10K training set samples. 
 
+What if the bootstrap is used to resample the model, using varying amounts of resamples? The results are: 
+
+<img src="figures/boot-resamples-coverage-1.svg" alt="plot of chunk boot-resamples-coverage" width="75%" style="display: block; margin: auto;" />
+
+These look a lot like the cross-validation results. 
 
 ## References
 

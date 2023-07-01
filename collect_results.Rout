@@ -33,7 +33,7 @@ Type 'q()' to quit R.
 ✖ dplyr::filter()  masks stats::filter()
 ✖ dplyr::lag()     masks stats::lag()
 ✖ recipes::step()  masks stats::step()
-• Use tidymodels_prefer() to resolve common conflicts.
+• Dig deeper into tidy modeling with R at https://www.tmwr.org
 > library(glue)
 > library(stringr)
 
@@ -142,7 +142,8 @@ The following object is masked from ‘package:recipes’:
 > 
 > # ------------------------------------------------------------------------------
 > 
-> save(lm_comparison, basic_coverage, file = "simulation_results.RData")
+> save(lm_comparison, resampled_coverage, basic_coverage, 
++      file = "simulation_results.RData")
 > 
 > # ------------------------------------------------------------------------------
 > 
@@ -245,4 +246,4 @@ The following object is masked from ‘package:recipes’:
 > 
 > proc.time()
    user  system elapsed 
-104.943   9.849 120.635 
+105.230   9.207 120.653 

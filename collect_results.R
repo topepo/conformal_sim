@@ -100,7 +100,8 @@ lm_comparison <-
 
 # ------------------------------------------------------------------------------
 
-save(lm_comparison, basic_coverage, file = "simulation_results.RData")
+save(lm_comparison, resampled_coverage, basic_coverage, 
+     file = "simulation_results.RData")
 
 # ------------------------------------------------------------------------------
 
