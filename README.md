@@ -47,12 +47,12 @@ The best possible root mean squared error was 0.25.
 The coefficients of determination were: 
 
 
-|model  |   R^2|  n| std_err|
-|:------|-----:|--:|-------:|
-|nnet   | 0.885| 10|   0.003|
-|Cubist | 0.884| 10|   0.003|
-|lm     | 0.787| 10|   0.005|
-|CART   | 0.534| 10|   0.009|
+|model  | R<sup>2</sup>|  n| std_err|
+|:------|-------------:|--:|-------:|
+|nnet   |         0.885| 10|   0.003|
+|Cubist |         0.884| 10|   0.003|
+|lm     |         0.787| 10|   0.005|
+|CART   |         0.534| 10|   0.009|
 
 Each section below evaluated the coverage properties for each conformal method.
 

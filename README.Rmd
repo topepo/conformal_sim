@@ -8,8 +8,8 @@ knitr::opts_chunk$set(
     comment = "#>",
     fig.align = 'center',
     fig.path = "figures/",
-    fig.width = 7,
-    fig.height = 7,
+    fig.width = 6,
+    fig.height = 6,
     out.width = "75%",
     dev = 'svg',
     dev.args = list(bg = "transparent"),
@@ -71,7 +71,7 @@ rsq_tab <-
   filter(metric == "rsq") %>% 
   select(-metric) %>% 
   arrange(desc(mean)) %>% 
-  rename(`R^2` = mean)
+  rename(`R<sup>2</sup>` = mean)
 
 ```
 
