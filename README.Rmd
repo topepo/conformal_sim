@@ -20,6 +20,7 @@ knitr::opts_chunk$set(
 # ------------------------------------------------------------------------------
 
 library(tidymodels)
+library(probably)
 
 # ------------------------------------------------------------------------------
 
@@ -36,6 +37,16 @@ mth_lvl <- c("split", "quantile", "cv+")
 # ------------------------------------------------------------------------------
 
 load("simulation_results.RData")
+load("cv_results.RData")
+
+# The "overfit nnet" model didn't exactly overfit as much as thought
+# so we'll remove it to reduce redundancy 
+
+basic_coverage     <- filter(basic_coverage, model != "nnet (overfit)")
+cv_results         <- filter(cv_results, model != "nnet (overfit)")
+resampled_coverage <- filter(resampled_coverage, model != "nnet (overfit)")
+
+# ------------------------------------------------------------------------------
 
 lvls <- 
   unique(basic_coverage$conf_level * 100) %>% 
@@ -48,9 +59,25 @@ training <-
   format(big.mark = ",") %>% 
   knitr::combine_words()
 
+rmse_tab <- 
+  cv_results %>% 
+  filter(metric == "rmse") %>% 
+  select(-metric) %>% 
+  arrange(mean) %>% 
+  rename(RMSE = mean)
+
+rsq_tab <- 
+  cv_results %>% 
+  filter(metric == "rsq") %>% 
+  select(-metric) %>% 
+  arrange(desc(mean)) %>% 
+  rename(`R^2` = mean)
+
 ```
 
 The `probably` package has several functions that can produce prediction intervals using conformal inference. This repo has some simulations to evaluate coverage properties for our implementations. 
+
+## Simulation Conditions
 
 The factors in the simulations
 
@@ -61,7 +88,7 @@ The factors in the simulations
    - CART trees (default parameters),
    - Cubist rules (20 committees and 7 nearest neighbors), 
    - Linear regression via ordinary least squares and simple main effects, and 
-   - Single layer, feed-forward neural networks (one properly tuned with 7 hidden units and another that deliberately overfits with 50 hidden units). Both were trained for 100 epochs. 
+   - Single layer, feed-forward neural networks (7 hidden units) and was trained for 100 epochs. 
 
 Each combination of settings was repeated 25 times. 
 
@@ -79,6 +106,26 @@ The coverage properties were assessed using a test set of 1,000 simulated data p
 
 The calibration data set size was held constant at 500 samples for the two split methods discussed below. 
 
+In terms of model performance, measured via 10-fold cross-validation, showed that two models had very good results, one was mediocore, and another signficanty underfits the data: 
+
+```{r}
+#| label: rmse-tbl
+#| results: 'asis'
+
+knitr::kable(rmse_tab, digits = 3)
+```
+
+The best possible root mean squared error was 0.25.
+
+The coefficients of determination were: 
+
+```{r}
+#| label: rsq-tbl
+#| results: 'asis'
+
+knitr::kable(rsq_tab, digits = 3)
+```
+
 Each section below evaluated the coverage properties for each conformal method.
 
 ## Split Conformal
@@ -88,6 +135,7 @@ The coverage results from using `int_conformal_split()` were:
 ```{r}
 #| label: split-coverage
 #| fig.align: 'center'
+#| fig.height: 4
 
 basic_coverage %>% 
   filter(method == "split") %>% 
@@ -147,6 +195,7 @@ We might expect the parametric intervals for be more narrow. The 90% intervals s
 ```{r}
 #| label: quantile-coverage
 #| fig.align: 'center'
+#| fig.height: 4
 
 basic_coverage %>% 
   filter(method == "quantile") %>% 
@@ -207,6 +256,7 @@ For cross-validation, the simulations focused on V-fold cross-validation with V 
 ```{r}
 #| label: cv-coverage
 #| fig.align: 'center'
+#| fig.height: 4
 
 basic_coverage %>% 
   filter(method == "cv+" & resamples == 10) %>% 
@@ -268,6 +318,7 @@ For repeated cross-validation, we can look at different amounts of resampling (f
 ```{r}
 #| label: cv-resamples-coverage
 #| fig.align: 'center'
+#| fig.height: 4
 
 resampled_coverage %>% 
   filter(method == "cv+" & resampling == "Cross-Validation") %>% 
@@ -288,6 +339,7 @@ What if the bootstrap is used to resample the model, using varying amounts of re
 ```{r}
 #| label: boot-resamples-coverage
 #| fig.align: 'center'
+#| fig.height: 4
 
 resampled_coverage %>% 
   filter(method == "cv+" & resampling == "Bootstrap") %>% 
@@ -301,7 +353,9 @@ resampled_coverage %>%
   labs(x = "Training Set Size", y = "Mean Coverage")
 ```
 
-These look a lot like the cross-validation results. 
+These look a lot like the cross-validation results.
+
+More resamples certainly improves coverage and the bootstrap appears to have slightly better coverage as 10-fold cross=validation. 
 
 ## References
 
