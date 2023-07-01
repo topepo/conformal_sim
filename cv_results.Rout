@@ -1,0 +1,244 @@
+
+R version 4.2.3 (2023-03-15) -- "Shortstop Beagle"
+Copyright (C) 2023 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin17.0 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(tidymodels)
+── Attaching packages ────────────────────────────────────── tidymodels 1.1.0 ──
+✔ broom        1.0.4     ✔ recipes      1.0.6
+✔ dials        1.2.0     ✔ rsample      1.1.1
+✔ dplyr        1.1.2     ✔ tibble       3.2.1
+✔ ggplot2      3.4.2     ✔ tidyr        1.3.0
+✔ infer        1.0.4     ✔ tune         1.1.1
+✔ modeldata    1.1.0     ✔ workflows    1.1.3
+✔ parsnip      1.1.0     ✔ workflowsets 1.0.1
+✔ purrr        1.0.1     ✔ yardstick    1.2.0
+── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
+✖ purrr::discard() masks scales::discard()
+✖ dplyr::filter()  masks stats::filter()
+✖ dplyr::lag()     masks stats::lag()
+✖ recipes::step()  masks stats::step()
+• Learn how to get started at https://www.tidymodels.org/start/
+> library(rules)
+
+Attaching package: ‘rules’
+
+The following object is masked from ‘package:dials’:
+
+    max_rules
+
+> library(doMC)
+Loading required package: foreach
+
+Attaching package: ‘foreach’
+
+The following objects are masked from ‘package:purrr’:
+
+    accumulate, when
+
+Loading required package: iterators
+Loading required package: parallel
+> 
+> # ------------------------------------------------------------------------------
+> 
+> tidymodels_prefer()
+> registerDoMC(cores = parallel::detectCores(TRUE))
+> 
+> # ------------------------------------------------------------------------------
+> 
+> resampling <- "cv-1"
+> n <- 10000
+> n_new <- 1000
+> seed <- 20
+> 
+> # ------------------------------------------------------------------------------
+> 
+> set.seed(seed)
+> sim_train <- sim_regression(n, method = "hooker_2004", keep_truth = FALSE)
+> sim_cal   <- sim_regression(500, method = "hooker_2004", keep_truth = FALSE)
+> sim_new   <- sim_regression(n_new, method = "hooker_2004", keep_truth = TRUE)
+> sim_new_pred <- sim_new %>% select(-outcome, -.truth)
+> 
+> # ------------------------------------------------------------------------------
+> 
+> rs_split <- strsplit(resampling, "-")[[1]]
+> rs_type <- rs_split[1]
+> rs_num <- as.numeric(rs_split[2])
+> 
+> set.seed(seed + 1)
+> if (rs_type == "cv") {
++   if (rs_num == 1) {
++     sim_rs <- vfold_cv(sim_train)
++   } else {
++     sim_rs <- vfold_cv(sim_train, repeats = rs_num)
++   }
++ } else if (rs_type == "boot") {
++   sim_rs <- bootstraps(sim_train, times = rs_num)
++ }
+> 
+> # ------------------------------------------------------------------------------
+> 
+> rec <-
++   recipe(outcome ~ ., data = sim_train) %>%
++   step_normalize(all_predictors())
+> 
+> cubist_wflow <-
++   workflow() %>%
++   add_formula(outcome ~ .) %>%
++   add_model(cubist_rules(committees = 20, neighbors = 7))
+> 
+> nnet_wflow <-
++   workflow() %>%
++   add_recipe(rec) %>%
++   add_model(mlp(hidden_units = 7, penalty = 0) %>% set_mode("regression"))
+> 
+> nnet_spec <-
++   mlp(hidden_units = 50, penalty = 0) %>%
++   set_mode("regression")
+> 
+> nnet_over_wflow <-
++   workflow() %>%
++   add_recipe(rec) %>%
++   add_model(nnet_spec)
+> 
+> cart_wflow <-
++   workflow() %>%
++   add_formula(outcome ~ .) %>%
++   add_model(decision_tree() %>% set_mode("regression"))
+> 
+> lm_wflow <-
++   workflow() %>%
++   add_formula(outcome ~ .) %>%
++   add_model(linear_reg())
+> 
+> cv_res <-
++   as_workflow_set(CART = cart_wflow, Cubist = cubist_wflow, lm = lm_wflow,
++                   `nnet (overfit)` = nnet_over_wflow, nnet = nnet_wflow) %>%
++   workflow_map("fit_resamples", resamples = sim_rs, seed = 1)
+> 
+> cv_results <-
++   rank_results(cv_res) %>%
++   select(model = wflow_id, metric = .metric, mean, n, std_err)
+> 
+> save(cv_results, file = "cv_results.RData")
+> 
+> # ------------------------------------------------------------------------------
+> 
+> sessioninfo::session_info()
+─ Session info ───────────────────────────────────────────────────────────────
+ setting  value
+ version  R version 4.2.3 (2023-03-15)
+ os       macOS Big Sur ... 10.16
+ system   x86_64, darwin17.0
+ ui       X11
+ language (EN)
+ collate  en_US.UTF-8
+ ctype    en_US.UTF-8
+ tz       America/New_York
+ date     2023-07-01
+ pandoc   3.1.1 @ /usr/local/bin/pandoc
+
+─ Packages ───────────────────────────────────────────────────────────────────
+ package      * version    date (UTC) lib source
+ backports      1.4.1      2021-12-13 [1] CRAN (R 4.2.0)
+ broom        * 1.0.4      2023-03-11 [1] CRAN (R 4.2.0)
+ cachem         1.0.7      2023-02-24 [1] CRAN (R 4.2.0)
+ class          7.3-22     2023-05-03 [1] CRAN (R 4.2.0)
+ cli            3.6.1      2023-03-23 [1] CRAN (R 4.2.0)
+ codetools      0.2-19     2023-02-01 [2] CRAN (R 4.2.3)
+ colorspace     2.1-0      2023-01-23 [1] CRAN (R 4.2.0)
+ conflicted     1.2.0      2023-02-01 [1] CRAN (R 4.2.0)
+ Cubist       * 0.4.2.1    2023-03-09 [1] CRAN (R 4.2.0)
+ data.table     1.14.8     2023-02-17 [1] CRAN (R 4.2.0)
+ dials        * 1.2.0      2023-04-03 [1] CRAN (R 4.2.0)
+ DiceDesign     1.9        2021-02-13 [1] CRAN (R 4.2.0)
+ digest         0.6.31     2022-12-11 [1] CRAN (R 4.2.0)
+ doMC         * 1.3.8      2022-02-05 [1] CRAN (R 4.2.0)
+ dplyr        * 1.1.2      2023-04-20 [1] CRAN (R 4.2.0)
+ fansi          1.0.4      2023-01-22 [1] CRAN (R 4.2.0)
+ fastmap        1.1.1      2023-02-24 [1] CRAN (R 4.2.0)
+ foreach      * 1.5.2      2022-02-02 [1] CRAN (R 4.2.0)
+ furrr          0.3.1      2022-08-15 [1] CRAN (R 4.2.0)
+ future         1.32.0     2023-03-07 [1] CRAN (R 4.2.0)
+ future.apply   1.10.0     2022-11-05 [1] CRAN (R 4.2.0)
+ generics       0.1.3      2022-07-05 [1] CRAN (R 4.2.0)
+ ggplot2      * 3.4.2      2023-04-03 [1] CRAN (R 4.2.0)
+ globals        0.16.2     2022-11-21 [1] CRAN (R 4.2.0)
+ glue           1.6.2      2022-02-24 [1] CRAN (R 4.2.0)
+ gower          1.0.1      2022-12-22 [1] CRAN (R 4.2.0)
+ GPfit          1.0-8      2019-02-08 [1] CRAN (R 4.2.0)
+ gtable         0.3.3      2023-03-21 [1] CRAN (R 4.2.0)
+ hardhat        1.3.0      2023-03-30 [1] CRAN (R 4.2.0)
+ infer        * 1.0.4      2022-12-02 [1] CRAN (R 4.2.0)
+ ipred          0.9-14     2023-03-09 [1] CRAN (R 4.2.0)
+ iterators    * 1.0.14     2022-02-05 [1] CRAN (R 4.2.0)
+ lattice      * 0.21-8     2023-04-05 [1] CRAN (R 4.2.0)
+ lava           1.7.2.1    2023-02-27 [1] CRAN (R 4.2.0)
+ lhs            1.1.6      2022-12-17 [1] CRAN (R 4.2.0)
+ lifecycle      1.0.3      2022-10-07 [1] CRAN (R 4.2.0)
+ listenv        0.9.0      2022-12-16 [1] CRAN (R 4.2.0)
+ lubridate      1.9.2      2023-02-10 [1] CRAN (R 4.2.0)
+ magrittr       2.0.3      2022-03-30 [1] CRAN (R 4.2.0)
+ MASS           7.3-60     2023-05-04 [1] CRAN (R 4.2.0)
+ Matrix         1.5-4      2023-04-04 [1] CRAN (R 4.2.0)
+ memoise        2.0.1      2021-11-26 [1] CRAN (R 4.2.0)
+ modeldata    * 1.1.0      2023-01-25 [1] CRAN (R 4.2.0)
+ munsell        0.5.0      2018-06-12 [1] CRAN (R 4.2.0)
+ nnet         * 7.3-19     2023-05-03 [1] CRAN (R 4.2.0)
+ parallelly     1.36.0     2023-05-26 [1] CRAN (R 4.2.0)
+ parsnip      * 1.1.0      2023-04-12 [1] CRAN (R 4.2.0)
+ pillar         1.9.0      2023-03-22 [1] CRAN (R 4.2.0)
+ pkgconfig      2.0.3      2019-09-22 [1] CRAN (R 4.2.0)
+ plyr           1.8.8      2022-11-11 [1] CRAN (R 4.2.0)
+ prodlim        2023.03.31 2023-04-02 [1] CRAN (R 4.2.0)
+ purrr        * 1.0.1      2023-01-10 [1] CRAN (R 4.2.0)
+ R6             2.5.1      2021-08-19 [1] CRAN (R 4.2.0)
+ Rcpp           1.0.10     2023-01-22 [1] CRAN (R 4.2.0)
+ recipes      * 1.0.6      2023-04-25 [1] CRAN (R 4.2.0)
+ reshape2       1.4.4      2020-04-09 [1] CRAN (R 4.2.0)
+ rlang          1.1.1      2023-04-28 [1] CRAN (R 4.2.0)
+ rpart        * 4.1.19     2022-10-21 [2] CRAN (R 4.2.3)
+ rsample      * 1.1.1      2022-12-07 [1] CRAN (R 4.2.0)
+ rstudioapi     0.14       2022-08-22 [1] CRAN (R 4.2.0)
+ rules        * 1.0.2      2023-03-08 [1] CRAN (R 4.2.0)
+ scales       * 1.2.1      2022-08-20 [1] CRAN (R 4.2.0)
+ sessioninfo    1.2.2      2021-12-06 [1] CRAN (R 4.2.0)
+ stringi        1.7.12     2023-01-11 [1] CRAN (R 4.2.0)
+ stringr        1.5.0      2022-12-02 [1] CRAN (R 4.2.0)
+ survival       3.5-5      2023-03-12 [1] CRAN (R 4.2.0)
+ tibble       * 3.2.1      2023-03-20 [1] CRAN (R 4.2.0)
+ tidymodels   * 1.1.0      2023-05-01 [1] CRAN (R 4.2.0)
+ tidyr        * 1.3.0      2023-01-24 [1] CRAN (R 4.2.0)
+ tidyselect     1.2.0      2022-10-10 [1] CRAN (R 4.2.0)
+ timechange     0.2.0      2023-01-11 [1] CRAN (R 4.2.0)
+ timeDate       4022.108   2023-01-07 [1] CRAN (R 4.2.0)
+ tune         * 1.1.1      2023-04-11 [1] CRAN (R 4.2.0)
+ utf8           1.2.3      2023-01-31 [1] CRAN (R 4.2.0)
+ vctrs          0.6.2      2023-04-19 [1] CRAN (R 4.2.0)
+ withr          2.5.0      2022-03-03 [1] CRAN (R 4.2.0)
+ workflows    * 1.1.3      2023-02-22 [1] CRAN (R 4.2.0)
+ workflowsets * 1.0.1      2023-04-06 [1] CRAN (R 4.2.0)
+ yardstick    * 1.2.0      2023-04-21 [1] CRAN (R 4.2.0)
+
+ [1] /Users/max/Library/R/x86_64/4.2/library
+ [2] /Library/Frameworks/R.framework/Versions/4.2/Resources/library
+
+──────────────────────────────────────────────────────────────────────────────
+> 
+> proc.time()
+   user  system elapsed 
+282.520   8.048  36.695 
