@@ -85,10 +85,10 @@ The factors in the simulations
  - Size of the training sets:  `r training`.
  - The type and amount of resampling (CV+ method only, see below). 
  - The model type: 
-   - CART trees (default parameters),
-   - Cubist rules (20 committees and 7 nearest neighbors), 
-   - Linear regression via ordinary least squares and simple main effects, and 
-   - Single layer, feed-forward neural networks (7 hidden units) and was trained for 100 epochs. 
+   - CART trees (default parameters).
+   - Cubist rules (20 committees and 7 nearest neighbors).
+   - Linear regression via ordinary least squares (OLS) and simple main effects. 
+   - Single layer, feed-forward neural network (7 hidden units, 100 epochs). 
 
 Each combination of settings was repeated 25 times. 
 
