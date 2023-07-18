@@ -1,8 +1,3 @@
----
-title: "Simulations for Conformal Inference in the probably Package"
-date: "2023-06-30"
----
-
 
 
 The `probably` package has several functions that can produce prediction intervals using conformal inference. This repo has some simulations to evaluate coverage properties for our implementations. 
@@ -131,3 +126,10 @@ More resamples certainly improves coverage and the bootstrap appears to have sli
 
 ## References
 
+
+* [_Introduction To Conformal Prediction With Python_](https://christophmolnar.com/books/conformal-prediction/) by Christoph Molnar
+ (highly recommended)
+* [`awesome-conformal-prediction`](https://github.com/valeman/awesome-conformal-prediction) on GitHub. 
+* [Ryan Tibshirani's notes](https://www.stat.berkeley.edu/~ryantibs/statlearn-s23/lectures/conformal.pdf) (pdf)
+* Angelopoulos, Anastasios N., and Stephen Bates. "[A gentle introduction to conformal prediction and distribution-free uncertainty quantification](https://arxiv.org/abs/2107.07511)." arXiv preprint arXiv:2107.07511 (2021).
+* 
