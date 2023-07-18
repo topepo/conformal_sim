@@ -132,4 +132,4 @@ More resamples certainly improves coverage and the bootstrap appears to have sli
 * [`awesome-conformal-prediction`](https://github.com/valeman/awesome-conformal-prediction) on GitHub. 
 * [Ryan Tibshirani's notes](https://www.stat.berkeley.edu/~ryantibs/statlearn-s23/lectures/conformal.pdf) (pdf)
 * Angelopoulos, Anastasios N., and Stephen Bates. "[A gentle introduction to conformal prediction and distribution-free uncertainty quantification](https://arxiv.org/abs/2107.07511)." arXiv preprint arXiv:2107.07511 (2021).
-* 
+
